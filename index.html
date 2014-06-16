@@ -2,6 +2,18 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <title>Collabpaint</title>
+
+    <style type="text/css">
+      #c {
+        border: 1px dashed black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" height="500" width="500">
+      <p>Looks like your browser is not supported. :(</p>
+    </canvas>
 
     <script>
       var webSocketHandler = "ws";
@@ -10,9 +22,46 @@
       }
       webSocketHandler += "://" + window.location.host + "/echo/";
       var connection = new WebSocket(webSocketHandler);
-    </script>
-  </head>
-  <body>
 
+      var canvas = document.getElementById("c");
+      var context = canvas.getContext("2d");
+      var boundingRect = canvas.getBoundingClientRect();
+
+      // Returns the (x, y) coordinates of the mouse relative to the
+      // canvas.
+      var getMousePos = function(event) {
+        return {
+          x: event.clientX - boundingRect.left,
+          y: event.clientY - boundingRect.top,
+        };
+      };
+
+      var lastPos = null;
+
+      // Draws a line on the canvas between lastPos and the current
+      // mouse position.
+      var mouseMove = function(event) {
+        pos = getMousePos(event);
+        if (lastPos) {
+          context.beginPath();
+          context.moveTo(lastPos.x, lastPos.y);
+          context.lineTo(pos.x, pos.y);
+          context.stroke();
+        }
+        lastPos = pos;
+      };
+
+      canvas.addEventListener("mousedown", function(event) {
+        canvas.addEventListener("mousemove", mouseMove);
+      });
+
+      canvas.addEventListener("mouseup", function(event) {
+        lastPos = null;
+
+        // It's a good idea to remove the mousemove event listener
+        // when it's not needed because it generates a lot of events
+        // which can be a hog on performance.
+        canvas.removeEventListener("mousemove", mouseMove); });
+    </script>
   </body>
 </html>
