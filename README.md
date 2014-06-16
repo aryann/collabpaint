@@ -15,5 +15,5 @@ powers, open http://127.0.0.1:8080/ in two or more browser
 windows. Changes made in one window should become visible in the other
 windows.
 
-This is still in a very nascant state. As time goes on, I hope to make
+This is still in a very nascent state. As time goes on, I hope to make
 it better.
