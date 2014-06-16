@@ -84,25 +84,25 @@ func NewSession() *Session {
 	}
 }
 
-func (h *Session) Start() {
+func (s *Session) Start() {
 	for {
 		select {
-		case client := <-h.pendingLeaves:
-			delete(h.members, client)
+		case client := <-s.pendingLeaves:
+			delete(s.members, client)
 			close(client.OutgoingQueue)
 			log.Printf("Client left: %v\n", client)
 
-		case client := <-h.pendingJoins:
-			h.members[client] = true
+		case client := <-s.pendingJoins:
+			s.members[client] = true
 			log.Printf("Client joined: %v\n", client)
 
-		case message := <-h.pendingBroadcasts:
+		case message := <-s.pendingBroadcasts:
 			log.Printf("Broadcasting message: %v\n", message)
-			for client := range h.members {
+			for client := range s.members {
 				select {
 				case client.OutgoingQueue <- message:
 				default:
-					delete(h.members, client)
+					delete(s.members, client)
 					close(client.OutgoingQueue)
 				}
 			}
@@ -110,16 +110,16 @@ func (h *Session) Start() {
 	}
 }
 
-func (h *Session) Join(client *Client) {
-	h.pendingJoins <- client
+func (s *Session) Join(client *Client) {
+	s.pendingJoins <- client
 }
 
-func (h *Session) Leave(client *Client) {
-	h.pendingLeaves <- client
+func (s *Session) Leave(client *Client) {
+	s.pendingLeaves <- client
 }
 
-func (h *Session) Share(message string) {
-	h.pendingBroadcasts <- message
+func (s *Session) Share(message string) {
+	s.pendingBroadcasts <- message
 }
 
 func main() {
@@ -128,7 +128,7 @@ func main() {
 	go session.Start()
 
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/echo/", makeWebSocketUpgrader(session))
+	http.HandleFunc("/websocket/", makeWebSocketUpgrader(session))
 
 	http.ListenAndServe(":8080", nil)
 }

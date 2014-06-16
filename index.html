@@ -20,7 +20,7 @@
       if (window.location.protocol == "https") {
         webSocketHandler += "s";
       }
-      webSocketHandler += "://" + window.location.host + "/echo/";
+      webSocketHandler += "://" + window.location.host + "/websocket/";
       var connection = new WebSocket(webSocketHandler);
 
       var canvas = document.getElementById("c");
