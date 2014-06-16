@@ -89,7 +89,6 @@ func NewSession() *Session {
 
 func (s *Session) Start() {
 	for {
-    log.Println(s)
 		select {
 		case client := <-s.pendingLeaves:
 			delete(s.members, client)
