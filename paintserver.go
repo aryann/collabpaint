@@ -89,6 +89,7 @@ func NewSession() *Session {
 
 func (s *Session) Start() {
 	for {
+    log.Println(s)
 		select {
 		case client := <-s.pendingLeaves:
 			delete(s.members, client)
@@ -106,12 +107,7 @@ func (s *Session) Start() {
 			log.Printf("Broadcasting message: %v\n", message)
 			s.allUpdates = append(s.allUpdates, message)
 			for client := range s.members {
-				select {
-				case client.OutgoingQueue <- message:
-				default:
-					delete(s.members, client)
-					close(client.OutgoingQueue)
-				}
+				client.OutgoingQueue <- message
 			}
 		}
 	}
