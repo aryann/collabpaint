@@ -27,6 +27,13 @@
       var context = canvas.getContext("2d");
       var boundingRect = canvas.getBoundingClientRect();
 
+      var drawLine = function(from, to) {
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.stroke();
+      };
+
       // Returns the (x, y) coordinates of the mouse relative to the
       // canvas.
       var getMousePos = function(event) {
@@ -38,15 +45,16 @@
 
       var lastPos = null;
 
-      // Draws a line on the canvas between lastPos and the current
-      // mouse position.
+      // Handles the mousemove event by sending the set of line segments
+      // traveled to the server. This function does not draw anything.
+      // Drawing happens once the server echos back the changes.
       var mouseMove = function(event) {
         pos = getMousePos(event);
         if (lastPos) {
-          context.beginPath();
-          context.moveTo(lastPos.x, lastPos.y);
-          context.lineTo(pos.x, pos.y);
-          context.stroke();
+          connection.send(JSON.stringify({
+            from: lastPos,
+            to: pos,
+          }));
         }
         lastPos = pos;
       };
@@ -62,6 +70,12 @@
         // when it's not needed because it generates a lot of events
         // which can be a hog on performance.
         canvas.removeEventListener("mousemove", mouseMove); });
+
+      connection.onmessage = function (e) {
+        console.log("New data: " + e.data);
+        var data = JSON.parse(e.data);
+        drawLine(data.from, data.to);
+      };
     </script>
   </body>
 </html>
