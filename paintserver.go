@@ -57,6 +57,7 @@ func (c *Client) ReadLoop(session *Session) {
 		_, message, err := c.conn.ReadMessage()
 		if err == io.EOF {
 			session.Leave(c)
+			break
 		}
 		session.Share(string(message))
 	}
@@ -73,6 +74,7 @@ type Session struct {
 	pendingLeaves     chan *Client
 	pendingJoins      chan *Client
 	pendingBroadcasts chan string
+	allUpdates        []string
 }
 
 func NewSession() *Session {
@@ -81,6 +83,7 @@ func NewSession() *Session {
 		pendingLeaves:     make(chan *Client),
 		pendingJoins:      make(chan *Client),
 		pendingBroadcasts: make(chan string),
+		allUpdates:        make([]string, 0),
 	}
 }
 
@@ -94,10 +97,14 @@ func (s *Session) Start() {
 
 		case client := <-s.pendingJoins:
 			s.members[client] = true
+			for _, message := range s.allUpdates {
+				client.OutgoingQueue <- message
+			}
 			log.Printf("Client joined: %v\n", client)
 
 		case message := <-s.pendingBroadcasts:
 			log.Printf("Broadcasting message: %v\n", message)
+			s.allUpdates = append(s.allUpdates, message)
 			for client := range s.members {
 				select {
 				case client.OutgoingQueue <- message:
